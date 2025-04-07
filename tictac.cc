@@ -184,7 +184,7 @@ void play(bool xturn, bool myTurn, char game[]){
 
     cout << "-The remaining squares are: ";
     for(int i = 0; i < 10; i++){
-        if(isdigit(game[i])){
+        if( game[i] == ' '){
             cout << "(" << i << ")";
             possible.push_back(i);
         }
@@ -253,7 +253,7 @@ int main(){
     showIntro();
 
     while(goon){
-        char game[9] = {'1','2','3','4','5','6','7','8','9'};
+        char game[9] = {' ',' ',' ',' ',' ',' ',' ',' ',' '};
         //zero for head one for tails to simplify? use enums in the future.
         coin = coinToss();
         random = randomToss();
