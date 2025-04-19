@@ -4,7 +4,7 @@
 #include <cstring>
 #include <time.h>
 #include <sstream>
-#include <vector>
+#include "Game.h"
 using namespace std;
 
 
@@ -86,6 +86,7 @@ bool randomToss(){
     return random;
 }
 
+
 bool checkTurn(bool coin,bool random){
     bool turn;
 
@@ -121,139 +122,33 @@ bool requestPlay(){
 }
 
 
-bool checkGame(const char game[],int turns, bool xturn, bool &myWin){
-    bool win = false;
-    char winChar;
-
-    if(turns <5){
-        win = false;
-    }else{
-        if(game[0]!=' ' && (game[0] == game[4]) && (game[4] == game[8])){
-            win = true;
-            winChar = game[4];
-           
-        }else if(game[2]!=' ' && (game[2] == game[4]) && (game[4] == game[6])){
-            win = true;
-            winChar = game[4];
-            
-        }
-        for(int i = 0; i < 3 && !win; i++){
-            if(game[i*3]!=' ' && (game[i*3] ==  game[1+i*3]) &&  (game[1+i*3]  == game[2+i*3])){
-                win =true;
-                winChar = game[i*3];
-                
-            }else if(game[i]!=' ' &&  (game[i] == game[i+3]) && (game[i+3] == game[i+6])){
-                win = true;
-                winChar = game[i];
-               
-            }
-        }
-    }
-    // diagonals, rows, colums 
-    if(win && xturn && winChar == 'X'){
-        myWin = true;
-    }else if(win && !xturn && winChar == 'O'){
-        myWin =true;
-    }else{
-        myWin = false;
-    }
-    
-    return win;
-}
-
-
-
-void drawBoard(const char game[]){ //char input[]
-   
-    for( int i = 0; i < 3;i++) {
-        cout << '\t'  << '\t' << " " << game[i*3] << " | " <<  game[1+i*3] << " | " << game[2+i*3] << endl;
-        if( i < 2){
-            cout << '\t' << '\t'  << "——— ——— ———" << endl;
-        }
-    }
-    cout << endl;
-
-}
-
-void play(bool xturn, bool myTurn, char game[]){
-    int square;
-    char myPlay,robot;
-    bool valid = false;
-    vector <int> possible;
-
-
-    cout << "-The remaining squares are: ";
-    for(int i = 0; i < 10; i++){
-        if( game[i] == ' '){
-            cout << "(" << i << ")";
-            possible.push_back(i);
-        }
-    }
-    cout << endl;
-    
-    if(xturn){
-        myPlay = 'X';
-        robot = 'O';
-    }else{
-        myPlay = 'O';
-        robot = 'X';
-    }
-    if(myTurn){
-       do{  
-           cout << "-Please introduce a valid square to play: ";
-           cin >> square;
-           cin.ignore();
-   
-           for(unsigned int i = 0; i < possible.size() && !valid; i++){
-               if(possible[i] == square){
-                   valid = true;
-                   game[square] = myPlay;
-               }
-           }
-       }while(!valid);
-
-    }else{
-
-        do{      
-            square = rand() % 9;
-            for(unsigned int i = 0; i < possible.size() && !valid; i++){
-                if(possible[i]== square){
-                    valid = true;
-                    game[square] = robot;
-                }
-            }
-        }while(!valid);
-        cout << "-The robot has chosen the square: " << square << endl;
-        //machine makes its play
-    }
-
-
-}
-
-void congrats(bool myWin){
+void congrats(bool myWin,int &wins,int &matches){
     if(myWin){
         cout << "Congratulations!!! You have defeated the machine!" << endl;
+        wins++;
     }else{
         cout << "Better luck next time, the machine has defeated you." << endl;
     }
-
+    matches++;
+    cout <<"Current score: " << wins << "-" << matches-wins << endl;
+    
 }
 
 void draw(){
-    cout << "The match has concluded in a draw, feel free to try again!" << endl;
+    cout << "The match has concluded in a draw nobody gets points, feel free to try again!" << endl;
 }
+
+
 
 int main(){
     bool coin,win,random,xturn,myturn,myWin,goon=true;
-    
-    int plays = 0;
     srand(time(NULL));
-
+    int matches = 0, wins = 0;
+    
 
     showIntro();
 
     while(goon){
-        char game[9] = {' ',' ',' ',' ',' ',' ',' ',' ',' '};
         //zero for head one for tails to simplify? use enums in the future.
         coin = coinToss();
         random = randomToss();
@@ -261,22 +156,22 @@ int main(){
         myturn = xturn;
         win = false;
         myWin = false;
-        plays = 0;
+        
+        Game g(xturn);
     
         
-        while(!win && plays < 9){
-            play(xturn,myturn,game);
-            plays++;
-            drawBoard(game);
-            win = checkGame(game,plays,xturn,myWin);
+        while(!win && g.getPlays() < 9){
+            g.makePlay(myturn);
+            g.addPlay();
+            g.drawBoard();
+            win = g.checkGame(xturn,myWin);
             myturn = !myturn;
         }
-        if(plays == 9 && !win){
+        if(g.getPlays() == 9 && !win){
             draw();
         }else{
-            congrats(myWin);
+            congrats(myWin,wins,matches);
         }
-
         goon = requestPlay();
     }
     return 0;
